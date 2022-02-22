@@ -16,7 +16,7 @@ async function main() {
   const maincontract = await hre.ethers.getContractFactory("ERC721R");
   const nft = await maincontract
   .connect(minter)
-  .deploy("ERC721R", "R-C", 5000, 1, 1645518868, 1645519008, 100000000000000, "ipfs.//QmXLrHE5QRRC1PYXNBqfkguuYc7DvKhboNp1BQDZLJGhjV/");
+  .deploy("ERC721R", "R-C", 5000, 1, 1645518868, 1645519008, 100000000000000, "ipfs://QmXLrHE5QRRC1PYXNBqfkguuYc7DvKhboNp1BQDZLJGhjV/");
   
   console.log('starting');
   await nft.deployed();

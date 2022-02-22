@@ -100,6 +100,7 @@ contract ERC721R is   Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
     mapping(address => mapping(address => bool)) private _operatorApprovals;
 
     uint maxMintPerAddress;
+    mapping(address => bool) eligibleForReward;
 
     constructor(string memory name_, string memory symbol_, uint _collectionSize, uint _maxMintPerAddress,uint _mintStartTime, uint _mintEndTime, uint _mintPrice, string memory baseURI_) {
         require(_mintEndTime > _mintStartTime);
@@ -368,9 +369,7 @@ contract ERC721R is   Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
        require(msg.value >= mintPrice, "value is less than mint price");
         _mint(to, quantity, "", true);
        if(totalSupply() < 100) {
-        uint leftMint = 100 - totalSupply();
-        uint amount = poolBalance/leftMint;
-        payable(msg.sender).transfer(amount);
+        eligibleForReward[msg.sender] = true;
        }
     }
 
@@ -381,6 +380,12 @@ contract ERC721R is   Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
         // require(block.timestamp <= mintEndTime + 7*24*60*60);
          _transfer(msg.sender, address(this), balanceOf(msg.sender));
         payable(msg.sender).transfer(mintPrice*balanceOf(msg.sender));
+
+        if(eligibleForReward[msg.sender] == true && balanceOf(msg.sender) > 0) {
+        uint leftMint = 100 - totalSupply();
+        uint amount = poolBalance/leftMint;
+        payable(msg.sender).transfer(amount);
+        }
 
         
     }
@@ -406,7 +411,7 @@ contract ERC721R is   Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
         uint256 quantity,
         bytes memory _data,
         bool safe
-    ) private {
+    ) private  maxMintsPerAdd(quantity){
         uint256 startTokenId = _currentIndex;
         if (to == address(0)) revert ("TokenIndexOutOfBounds");
         if (quantity == 0) revert("TokenIndexOutOfBounds");
