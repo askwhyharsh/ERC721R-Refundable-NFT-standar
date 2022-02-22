@@ -26,12 +26,7 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
         url: "https://eth-mainnet.alchemyapi.io/v2/T7zl8dVCWk_5oSZuFpmz9TrZ3BGViK69",
       } 
     }, 
-    testnet: {
-      url: "https://data-seed-prebsc-1-s1.binance.org:8545",  
-      chainId: 97,
-      gasPrice: 20000000000,
-      accounts: ["", ""]
-    }
+   
   },
   // etherscan: {
   //   // Your API key for Etherscan - rinkeby

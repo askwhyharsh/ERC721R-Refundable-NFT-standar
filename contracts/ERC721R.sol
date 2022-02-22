@@ -72,6 +72,7 @@ contract ERC721R is   Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
     uint mintEndTime;
     uint mintPrice;
     uint poolBalance;
+    string baseURI;
 
     // Token symbol
     string private _symbol;
@@ -100,7 +101,7 @@ contract ERC721R is   Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
 
     uint maxMintPerAddress;
 
-    constructor(string memory name_, string memory symbol_, uint _collectionSize, uint _maxMintPerAddress,uint _mintStartTime, uint _mintEndTime, uint _mintPrice) {
+    constructor(string memory name_, string memory symbol_, uint _collectionSize, uint _maxMintPerAddress,uint _mintStartTime, uint _mintEndTime, uint _mintPrice, string memory baseURI_) {
         require(_mintEndTime > _mintStartTime);
         _name = name_;
         _symbol = symbol_;
@@ -109,6 +110,7 @@ contract ERC721R is   Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
         mintEndTime = _mintEndTime;
         mintPrice = _mintPrice;
         maxMintPerAddress = _maxMintPerAddress;
+        baseURI = baseURI_;
 
 
     }
@@ -174,12 +176,12 @@ contract ERC721R is   Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
      * @dev See {IERC721-balanceOf}.
      */
     function balanceOf(address owner) public view override returns (uint256) {
-        if (owner == address(0)) revert ("TokenIndexOutOfBounds");
+        if (owner == address(0)) revert ("owner can't be 0 address");
         return uint256(_addressData[owner].balance);
     }
 
     function _numberMinted(address owner) internal view returns (uint256) {
-        if (owner == address(0)) revert ("TokenIndexOutOfBounds");
+        if (owner == address(0)) revert ("owner can't be 0 address");
         return uint256(_addressData[owner].numberMinted);
     }
 
@@ -188,7 +190,7 @@ contract ERC721R is   Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
      * It gradually moves to O(1) as tokens get transferred around in the collection over time.
      */
     function ownershipOf(uint256 tokenId) internal view returns (TokenOwnership memory) {
-        if (!_exists(tokenId)) revert ("TokenIndexOutOfBounds");
+        if (!_exists(tokenId)) revert ("Token Does not exist");
 
         unchecked {
             for (uint256 curr = tokenId;; curr--) {
@@ -225,10 +227,14 @@ contract ERC721R is   Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
      * @dev See {IERC721Metadata-tokenURI}.
      */
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-        if (!_exists(tokenId)) revert ("TokenIndexOutOfBounds");
+        if (!_exists(tokenId)) revert ("Token Does not exist");
 
-        string memory baseURI = _baseURI();
-        return bytes(baseURI).length != 0 ? string(abi.encodePacked(baseURI, tokenId.toString())) : '';
+        string memory baseUri = _baseURI();
+        return bytes(baseUri).length != 0 ? string(abi.encodePacked(baseUri, tokenId.toString(), ".json")) : '';
+    }
+
+    function setBaseURI(string memory _baseUri) public onlyOwner {
+        baseURI = _baseUri;
     }
 
     /**
@@ -237,7 +243,7 @@ contract ERC721R is   Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
      * by default, can be overriden in child contracts.
      */
     function _baseURI() internal view virtual returns (string memory) {
-        return '';
+        return baseURI;
     }
 
     /**
@@ -245,7 +251,7 @@ contract ERC721R is   Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
      */
     function approve(address to, uint256 tokenId) public override {
         address owner = ERC721R.ownerOf(tokenId);
-        if (to == owner) revert ("TokenIndexOutOfBounds");
+        if (to == owner) revert ("can't approve to self");
 
         if (_msgSender() != owner && !isApprovedForAll(owner, _msgSender())) revert ("TokenIndexOutOfBounds");
 
@@ -256,7 +262,7 @@ contract ERC721R is   Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
      * @dev See {IERC721-getApproved}.
      */
     function getApproved(uint256 tokenId) public view override returns (address) {
-        if (!_exists(tokenId)) revert ("TokenIndexOutOfBounds");
+        if (!_exists(tokenId)) revert ("token does not exist");
 
         return _tokenApprovals[tokenId];
     }
@@ -265,7 +271,7 @@ contract ERC721R is   Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
      * @dev See {IERC721-setApprovalForAll}.
      */
     function setApprovalForAll(address operator, bool approved) public override {
-        if (operator == _msgSender()) revert ("TokenIndexOutOfBounds");
+        if (operator == _msgSender()) revert ("can't approve to self");
 
         _operatorApprovals[_msgSender()][operator] = approved;
         emit ApprovalForAll(_msgSender(), operator, approved);
