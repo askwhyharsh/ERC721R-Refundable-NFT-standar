@@ -375,10 +375,14 @@ contract ERC721R is   Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
     }
 
     function claimRefund() public {
-        require(block.timestamp > mintEndTime, "mint not ened yet");
+        require(block.timestamp > mintEndTime, "mint not ended yet");
         require(totalSupply() < collectionSize, "not eligible for refund");
+        require(balanceOf(msg.sender) > 0 , "not eligible as you don't have the nft");
+        // require(block.timestamp <= mintEndTime + 7*24*60*60);
+         _transfer(msg.sender, address(this), balanceOf(msg.sender));
+        payable(msg.sender).transfer(mintPrice*balanceOf(msg.sender));
 
-        payable(msg.sender).transfer(mintPrice);
+        
     }
 
     function withdraw() public view onlyOwner{
@@ -407,6 +411,7 @@ contract ERC721R is   Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
         if (to == address(0)) revert ("TokenIndexOutOfBounds");
         if (quantity == 0) revert("TokenIndexOutOfBounds");
         require(block.timestamp >= mintStartTime);
+        require(block.timestamp <= mintEndTime);
         
         
 
